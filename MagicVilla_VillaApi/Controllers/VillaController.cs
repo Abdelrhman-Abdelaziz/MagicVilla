@@ -9,6 +9,7 @@ using MagicVilla_VillaApi.DataAccess;
 using MagicVilla_VillaApi.Models.DTOs;
 using AutoMapper;
 using MagicVilla_VillaApi.Models;
+using MagicVilla_VillaApi.Repository.IRepository;
 
 namespace MagicVilla_VillaApi.Controllers
 {
@@ -16,13 +17,13 @@ namespace MagicVilla_VillaApi.Controllers
     [ApiController]
     public class VillaController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<VillaController> _logger;
         private readonly IMapper _mapper;
 
-        public VillaController(AppDbContext context, ILogger<VillaController> logger, IMapper _mapper)
+        public VillaController(IUnitOfWork unitOfWork, ILogger<VillaController> logger, IMapper _mapper)
         {
-            _context = context;
+            _unitOfWork = unitOfWork;
             _logger = logger;
             this._mapper = _mapper;
         }
@@ -33,12 +34,12 @@ namespace MagicVilla_VillaApi.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<IEnumerable<VillaDTO>>> GetVillas()
         {
-            if (_context.Villas == null)
+            if (_unitOfWork.Villas == null)
             {
                 return NotFound();
             }
-            var vallas = await _context.Villas.ToListAsync();
-            var vaillasDTO = _mapper.Map<VillaDTO>(vallas);
+            var vallas = await _unitOfWork.Villas.GetAllAsync();
+            var vaillasDTO = _mapper.Map<List<VillaDTO>>(vallas);
 
             return Ok(vaillasDTO);
         }
@@ -49,11 +50,11 @@ namespace MagicVilla_VillaApi.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<VillaDTO>> GetVilla(int id)
         {
-            if (_context.Villas == null)
+            if (_unitOfWork.Villas == null)
             {
                 return NotFound();
             }
-            var villa = await _context.Villas.FindAsync(id);
+            var villa = await _unitOfWork.Villas.GetByIdAsync(id);
 
             if (villa == null)
             {
@@ -71,30 +72,22 @@ namespace MagicVilla_VillaApi.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
 
-        public async Task<IActionResult> UpdateVilla(int id, VillaUpdateDTO villaDTO)
+        public async Task<IActionResult> UpdateVilla(int id, VillaUpdateDTO updateDTO)
         {
-            if (id != villaDTO.Id)
+            if (!VillaExists(id))
+            {
+                return NotFound();
+            }
+
+            if (id != updateDTO.Id)
             {
                 return BadRequest();
             }
-            var villa = _mapper.Map<Villa>(villaDTO);
-            _context.Villas.Update(villa);
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!VillaExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            var villa = _mapper.Map<Villa>(updateDTO);
+            _unitOfWork.Villas.Update(villa);
+
+            await _unitOfWork.SaveAsync();
 
             return NoContent();
         }
@@ -105,17 +98,17 @@ namespace MagicVilla_VillaApi.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<VillaDTO>> CreateVilla(VillaCreateDTO villaDTO)
+        public async Task<ActionResult<VillaDTO>> CreateVilla(VillaCreateDTO createDTO)
         {
-            if (_context.Villas == null)
+            if (_unitOfWork.Villas == null)
             {
                 //return Problem("Entity set 'AppDbContext.VillaDTO'  is null.");
                 return StatusCode(StatusCodes.Status500InternalServerError, "Some Thing Went Wrong!");
             }
 
-            var villa = _mapper.Map<Villa>(villaDTO);
-            _context.Villas.Add(villa);
-            await _context.SaveChangesAsync();
+            var villa = _mapper.Map<Villa>(createDTO);
+            await _unitOfWork.Villas.AddAsync(villa);
+            await _unitOfWork.SaveAsync();
 
             return CreatedAtAction("GetVilla", new { id = villa.Id }, villa);
         }
@@ -126,25 +119,27 @@ namespace MagicVilla_VillaApi.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteVilla(int id)
         {
-            if (_context.Villas == null)
+            if (_unitOfWork.Villas == null)
             {
                 return NotFound();
             }
-            var villa = await _context.Villas.FindAsync(id);
+            var villa = await _unitOfWork.Villas.GetByIdAsync(id);
             if (villa == null)
             {
                 return NotFound();
             }
 
-            _context.Villas.Remove(villa);
-            await _context.SaveChangesAsync();
+            _unitOfWork.Villas.Remove(villa);
+            await _unitOfWork.SaveAsync();
 
             return NoContent();
         }
 
         private bool VillaExists(int id)
         {
-            return ( _context.Villas?.Any(e => e.Id == id)).GetValueOrDefault();
+            var villa = _unitOfWork.Villas.GetAsync(v => v.Id == id, false).Result;
+
+            return villa != null;
         }
     }
 }

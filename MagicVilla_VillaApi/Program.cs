@@ -1,5 +1,7 @@
 using MagicVilla_VillaApi.DataAccess;
 using MagicVilla_VillaApi.Models.Configurations;
+using MagicVilla_VillaApi.Repository;
+using MagicVilla_VillaApi.Repository.IRepository;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers(options =>
 {
-    options.ReturnHttpNotAcceptable = true;
+    //  options.ReturnHttpNotAcceptable = true;
 });
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -20,6 +22,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 });
 
 builder.Services.AddAutoMapper(typeof(MappingConfig));
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
