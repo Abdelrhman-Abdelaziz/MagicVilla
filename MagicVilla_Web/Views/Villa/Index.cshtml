@@ -1,0 +1,56 @@
+﻿@model IEnumerable<VillaDTO>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+
+
+<div class="container p-4 border">
+    <div class="row pb-3">
+        <div class="col">
+            <h1 class="text-primary">Villa List</h1>
+        </div>
+        <div class="col text-end pt-1">
+            <a class="btn btn-outline-primary" asp-action="Create">Create New Villa</a>
+        </div>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>
+                    Name
+                </th>
+                <th>
+                    Occupancy
+                </th>
+                <th>
+                    Price
+                </th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        @item.Name
+                    </td>
+                    <td>
+                        @item.Occupancy
+                    </td>
+                    <td>
+                        @((item.Rate).ToString("c"))
+                    </td>
+                    <td class="text-end">
+                        <a class="btn btn-outline-success" asp-route-Id="@item.Id" asp-action="Edit">Edit</a>
+                        @*<a class="btn btn-outline-info" asp-action="Details">Details</a>*@
+                        <a class="btn btn-outline-danger" asp-route-Id="@item.Id" asp-action="Delete">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
