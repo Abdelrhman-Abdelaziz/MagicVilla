@@ -8,6 +8,8 @@ namespace MagicVilla_VillaApi.DataAccess
     {
         public AppDbContext(DbContextOptions options) : base(options) { }
         public virtual DbSet<Villa> Villas { get; set; }
+        public virtual DbSet<VillaNumber> VillaNumbers { get; set; }
+        public virtual DbSet<LocalUser> LocalUsers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

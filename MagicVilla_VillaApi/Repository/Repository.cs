@@ -7,39 +7,39 @@ namespace MagicVilla_VillaApi.Repository
 {
     public class Repository<TEntity> : IRepository<TEntity> where TEntity : class
     {
-        protected readonly DbContext _conext;
+        private readonly DbContext _conext;
         private DbSet<TEntity> dbSet;
 
         public Repository(AppDbContext conext)
         {
             _conext = conext;
-            this.dbSet = _conext.Set<TEntity>(); 
+            this.dbSet = _conext.Set<TEntity>();
         }
 
-        public async Task<IEnumerable<TEntity>> GetAllAsync(Expression<Func<TEntity, bool>>? filter = null, bool tracked = true)
+        public async Task<IEnumerable<TEntity>> GetAllAsync(Expression<Func<TEntity, bool>> filter = null, bool tracked = false)
         {
             IQueryable<TEntity> query = dbSet;
             if (filter != null)
             {
                 query = query.Where(filter);
             }
-            if (!tracked)
+            if (tracked)
             {
-                query = query.AsNoTracking();
+                query = query.AsTracking();
             }
             return await query.ToListAsync();
         }
 
-        public async Task<TEntity?> GetAsync(Expression<Func<TEntity, bool>>? filter = null, bool tracked = true)
+        public async Task<TEntity> GetAsync(Expression<Func<TEntity, bool>> filter = null, bool tracked = false)
         {
             IQueryable<TEntity> query = dbSet;
             if (filter != null)
             {
                 query = query.Where(filter);
             }
-            if (!tracked)
+            if (tracked)
             {
-                query = query.AsNoTracking();
+                query = query.AsTracking();
             }
             return await query.FirstOrDefaultAsync();
         }
@@ -55,7 +55,7 @@ namespace MagicVilla_VillaApi.Repository
         }
 
 
-        public async Task<TEntity?> GetByIdAsync(int id)
+        public async Task<TEntity> FindAsync(int id)
         {
             return await dbSet.FindAsync(id);
         }
@@ -74,30 +74,9 @@ namespace MagicVilla_VillaApi.Repository
         {
             dbSet.Update(entity);
         }
-
-        //private IQueryable<TEntity> AddIncludeProperties(IQueryable<TEntity> query, string? includeProperties)
-        //{
-        //    if (includeProperties != null)
-        //    {
-        //        var includeProps = includeProperties.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-        //        foreach (var includeProp in includeProps)
-        //        {
-        //            query = query.Include(includeProp);
-        //        }
-        //    }
-        //    return query;
-        //}
-
-        //private IQueryable<TEntity> AddIncludeProperties(IQueryable<TEntity> query, Expression<Func<TEntity, object>>[]? includeProperties)
-        //{
-        //    if (includeProperties != null)
-        //    {
-        //        foreach (var includeProp in includeProperties)
-        //        {
-        //            query = query.Include(includeProp);
-        //        }
-        //    }
-        //    return query;
-        //}
+        public async Task<bool> ContainsAsync(int id)
+        {
+            return await dbSet.FindAsync(id) != null;
+        }
     }
 }

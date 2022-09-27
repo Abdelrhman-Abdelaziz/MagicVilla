@@ -1,11 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace MagicVilla_VillaApi.Models
 {
     public class Villa
     {
         public int Id { get; set; }
+        [Required]
         public string Name { get; set; }
         public string Details { get; set; }
         public double Rate { get; set; }

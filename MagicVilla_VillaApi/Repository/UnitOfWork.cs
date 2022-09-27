@@ -7,12 +7,15 @@ namespace MagicVilla_VillaApi.Repository
     {
         private readonly AppDbContext _context;
         public IVillaRepository Villas { get; init; }
+        public IVillaNumberRepository VillaNumbers { get; init; }
+        public IUserRepository Users { get; init; }
 
 
         public UnitOfWork(AppDbContext context)
         {
             _context = context;
             Villas = new VillaRepository(_context);
+            VillaNumbers = new VillaNumberRepository(_context);
 
         }
 
